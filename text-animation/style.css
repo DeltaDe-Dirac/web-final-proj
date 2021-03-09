@@ -1,0 +1,31 @@
+.content {
+  display: flex;
+}
+
+.scroll-up {
+  height: 100px;
+  width: 500px;
+  /* overflow: hidden; */
+  position: relative;
+  line-height: 1.5em;
+  font-size: 20px;
+  border: 5px solid orange;
+}
+
+.scroll-up p {
+  margin: 0 20px;
+  text-align: center;
+}
+
+.scroll-up p.active {
+  position: absolute;
+  animation: scroll-up 10s linear;
+}
+@keyframes scroll-up {
+  0% {
+    transform: translateY(0%);
+  }
+  100% {
+    transform: translateY(-100%);
+  }
+}
