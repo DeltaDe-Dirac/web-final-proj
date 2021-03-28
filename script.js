@@ -1,6 +1,13 @@
+"use strict";
+
 var linesArr;
 var currLine;
 var curLesson;
+var keypress = new Audio("sound/keyPress.mp3");
+var wrongKeypress = new Audio("sound/wrongKeyPress2.mp3");
+var wordsReadLimit = 3;
+var wordsToReadArr = [];
+var wordsToReadArrCounter = 0;
 
 /**
  * Initialze variables
@@ -37,6 +44,12 @@ function talk() {
   document.getElementById("main").style.display = "block";
 }
 
+function talkWords(words) {
+  var msg = new SpeechSynthesisUtterance();
+  msg.text = words;
+  window.speechSynthesis.speak(msg);
+}
+
 function logMsg() {
   if (currLine < linesArr.length) {
     console.log(linesArr[currLine++]);
@@ -61,7 +74,13 @@ function loadLesson() {
 }
 
 function startLesson() {
-  string = document.getElementById("preload").innerText;
+  wordsToReadArr = [];
+  wordsToReadArrCounter = 0;
+  counter = 0;
+
+  let wordsCounter = 0;
+  let wordsToReadStr = "";
+  var string = document.getElementById("preload").innerText;
   string = string.replace(/\s\s+|\n/g, " ");
   string = string.trim();
 
@@ -80,6 +99,7 @@ function startLesson() {
   spn.classList.add("_clean");
   spn.classList.add("_focus");
   spn.innerText = string.charAt(0);
+  wordsToReadStr = string.charAt(0);
   word.appendChild(spn);
   // mainDiv.appendChild(word);
 
@@ -104,14 +124,22 @@ function startLesson() {
     // }
 
     spn.innerText = string.charAt(i);
+    wordsToReadStr += string.charAt(i);
     word.appendChild(spn);
 
     if (string.charAt(i) == " ") {
+      ++wordsCounter;
+      if (wordsCounter % wordsReadLimit === 0) {
+        wordsToReadArr.push(wordsToReadStr);
+        wordsToReadStr = "";
+      }
+
       mainDiv.appendChild(word);
       word = document.createElement("SPAN");
       word.classList.add("_word");
     }
   }
+  wordsToReadArr.push(wordsToReadStr);
   mainDiv.appendChild(word);
   loadLesson();
 
@@ -134,6 +162,8 @@ function startLesson() {
   }
   console.log(rectArr);
 
+  talkWords(wordsToReadArr[wordsToReadArrCounter++]);
+
   function getLineBreaksAndLog() {
     console.log(range.getClientRects());
   }
@@ -141,7 +171,14 @@ function startLesson() {
 
 document.addEventListener("keydown", logKey);
 
+var counter = 0;
 function logKey(e) {
+  keypress.pause();
+  keypress.currentTime = 0;
+
+  wrongKeypress.pause();
+  wrongKeypress.currentTime = 0;
+
   let spnEl = document.getElementsByClassName("_focus")[0];
   let spanText = spnEl.innerHTML;
   console.log("span value|" + spanText + "|");
@@ -155,6 +192,8 @@ function logKey(e) {
     // }
 
     if (e.key == spanText) {
+      keypress.play();
+
       if (spnEl.classList.contains("_error")) {
         spnEl.classList.add("_fixed");
         spnEl.classList.remove("_error");
@@ -163,13 +202,25 @@ function logKey(e) {
         spnEl.classList.add("_correct");
       }
     } else {
+      wrongKeypress.play();
       console.log("|" + e.key + "-" + spanText + "|");
       spnEl.classList.add("_error");
       spnEl.classList.remove("_correct");
       spnEl.classList.remove("_fixed");
     }
+
+    // handle focus
     if (spnEl.nextElementSibling) {
       spnEl.nextElementSibling.classList.add("_focus");
+      //increment counter on next space
+      if (spnEl.nextElementSibling.innerHTML == " ") {
+        ++counter;
+        //handle speech
+        if (counter % wordsReadLimit === 0) {
+          window.speechSynthesis.cancel();
+          talkWords(wordsToReadArr[wordsToReadArrCounter++]);
+        }
+      }
     } else {
       if (spnEl.parentNode.nextElementSibling) {
         spnEl = spnEl.parentNode.nextElementSibling.firstChild;
@@ -179,6 +230,7 @@ function logKey(e) {
       }
     }
   } else if (e.keyCode == 8) {
+    keypress.play();
     if (spnEl.previousElementSibling) {
       spnEl.classList.remove("_focus");
       spnEl.previousElementSibling.classList.add("_focus");
