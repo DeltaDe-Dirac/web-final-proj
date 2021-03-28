@@ -3,8 +3,11 @@
 var linesArr;
 var currLine;
 var curLesson;
+
 var keypress = new Audio("sound/keyPress.mp3");
 var wrongKeypress = new Audio("sound/wrongKeyPress2.mp3");
+var specialCharSound = new Audio("");
+
 var wordsReadLimit = 3;
 var wordsToReadArr = [];
 var wordsToReadArrCounter = 0;
@@ -228,9 +231,12 @@ function logKey(e) {
             talkWords(wordsToReadArr[wordsToReadArrCounter++]);
           }
         }
+
+        specCharSound(spnEl.nextElementSibling.innerHTML);
       } else {
         if (spnEl.parentNode.nextElementSibling) {
           spnEl = spnEl.parentNode.nextElementSibling.firstChild;
+          specCharSound(spnEl.innerHTML);
           spnEl.classList.add("_focus");
         } else {
           startLesson();
@@ -268,6 +274,23 @@ function logKey(e) {
     --mistypedCounter;
   }
   console.log(e.key);
+}
+
+function specCharSound(nextChar) {
+  let charCode = nextChar.charCodeAt(0);
+  let soundMapper = {
+    40: "sound/40-left-par.mp3",
+    41: "sound/41-right-par.mp3",
+    44: "sound/44-comma.mp3",
+    46: "sound/46-dot.mp3",
+    58: "sound/58-colon.mp3",
+    59: "sound/59-semicolon.mp3",
+  };
+
+  if (soundMapper[charCode]) {
+    specialCharSound = new Audio(soundMapper[charCode]);
+    specialCharSound.play();
+  }
 }
 
 function getLineBreaks(node) {
