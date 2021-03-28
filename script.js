@@ -279,6 +279,7 @@ function logKey(e) {
 function specCharSound(nextChar) {
   let charCode = nextChar.charCodeAt(0);
   let soundMapper = {
+    33: "sound/33-exclamation-mark.mp3",
     40: "sound/40-left-par.mp3",
     41: "sound/41-right-par.mp3",
     44: "sound/44-comma.mp3",
