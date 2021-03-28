@@ -81,6 +81,7 @@ function startLesson() {
   wordsToReadArrCounter = 0;
   spaceCounter = 0;
   mistypedCounter = 0;
+  window.speechSynthesis.cancel();
 
   let wordsCounter = 0;
   let wordsToReadStr = "";
