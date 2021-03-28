@@ -8,6 +8,9 @@ var wrongKeypress = new Audio("sound/wrongKeyPress2.mp3");
 var wordsReadLimit = 3;
 var wordsToReadArr = [];
 var wordsToReadArrCounter = 0;
+var spaceCounter = 0;
+var mistypedLimit = 1;
+var mistypedCounter = 0;
 
 /**
  * Initialze variables
@@ -76,7 +79,8 @@ function loadLesson() {
 function startLesson() {
   wordsToReadArr = [];
   wordsToReadArrCounter = 0;
-  counter = 0;
+  spaceCounter = 0;
+  mistypedCounter = 0;
 
   let wordsCounter = 0;
   let wordsToReadStr = "";
@@ -171,7 +175,6 @@ function startLesson() {
 
 document.addEventListener("keydown", logKey);
 
-var counter = 0;
 function logKey(e) {
   keypress.pause();
   keypress.currentTime = 0;
@@ -193,6 +196,7 @@ function logKey(e) {
 
     if (e.key == spanText) {
       keypress.play();
+      mistypedCounter = 0;
 
       if (spnEl.classList.contains("_error")) {
         spnEl.classList.add("_fixed");
@@ -202,6 +206,7 @@ function logKey(e) {
         spnEl.classList.add("_correct");
       }
     } else {
+      mistypedCounter = mistypedLimit > mistypedCounter ? ++mistypedCounter : mistypedCounter;
       wrongKeypress.play();
       console.log("|" + e.key + "-" + spanText + "|");
       spnEl.classList.add("_error");
@@ -210,40 +215,56 @@ function logKey(e) {
     }
 
     // handle focus
-    if (spnEl.nextElementSibling) {
-      spnEl.nextElementSibling.classList.add("_focus");
-      //increment counter on next space
-      if (spnEl.nextElementSibling.innerHTML == " ") {
-        ++counter;
-        //handle speech
-        if (counter % wordsReadLimit === 0) {
-          window.speechSynthesis.cancel();
-          talkWords(wordsToReadArr[wordsToReadArrCounter++]);
+    if (mistypedLimit > mistypedCounter) {
+      if (spnEl.nextElementSibling) {
+        spnEl.nextElementSibling.classList.add("_focus");
+        //increment spaceCounter on next space
+        if (spnEl.nextElementSibling.innerHTML == " ") {
+          ++spaceCounter;
+          //handle speech
+          if (spaceCounter % wordsReadLimit === 0) {
+            window.speechSynthesis.cancel();
+            talkWords(wordsToReadArr[wordsToReadArrCounter++]);
+          }
+        }
+      } else {
+        if (spnEl.parentNode.nextElementSibling) {
+          spnEl = spnEl.parentNode.nextElementSibling.firstChild;
+          spnEl.classList.add("_focus");
+        } else {
+          startLesson();
         }
       }
     } else {
-      if (spnEl.parentNode.nextElementSibling) {
-        spnEl = spnEl.parentNode.nextElementSibling.firstChild;
-        spnEl.classList.add("_focus");
-      } else {
-        startLesson();
-      }
+      spnEl.classList.add("_focus");
     }
   } else if (e.keyCode == 8) {
     keypress.play();
-    if (spnEl.previousElementSibling) {
-      spnEl.classList.remove("_focus");
-      spnEl.previousElementSibling.classList.add("_focus");
-      spnEl.previousElementSibling.classList.add("_clean");
-    } else {
-      spnEl.classList.remove("_focus");
-      spnEl = spnEl.parentElement.previousElementSibling.lastChild;
-      if (spnEl) {
-        console.log("|" + e.key + "-" + spanText + "|");
-        spnEl.classList.add("_focus");
-        spnEl.classList.add("_clean");
+
+    if (mistypedLimit > mistypedCounter) {
+      if (spnEl.previousElementSibling) {
+        spnEl.classList.remove("_focus");
+        spnEl.previousElementSibling.classList.add("_focus");
+        spnEl.previousElementSibling.classList.add("_clean");
+      } else if (spnEl.parentElement.previousElementSibling) {
+        spnEl.classList.remove("_focus");
+        spnEl = spnEl.parentElement.previousElementSibling.lastChild;
+        --spaceCounter;
+        //handle speech
+        if (spaceCounter % wordsReadLimit === 0) {
+          window.speechSynthesis.cancel();
+          talkWords(wordsToReadArr[--wordsToReadArrCounter]);
+        }
+        if (spnEl) {
+          console.log("|" + e.key + "-" + spanText + "|");
+          spnEl.classList.add("_focus");
+          spnEl.classList.add("_clean");
+        }
       }
+    } else {
+      spnEl.classList.add("_clean");
     }
+    --mistypedCounter;
   }
   console.log(e.key);
 }
